@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="navbar">
+  <h3>Smart Attendance | Admin Panel</h3>
+
+  <div class="user-box">
+    <div class="avatar" id="avatar"></div>
+    <div class="username" id="username"></div>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+
+<div class="container">
+
+  <div class="card">
+
+   <h2>All Users</h2>
+
+    <button onclick="load()">Load Users</button>
+
+    <h3>Teachers</h3>
+    <ul id="teachers"></ul>
+
+    <h3>Students</h3>
+    <ul id="students"></ul>
+
+    <hr>
+
+    <h3>Full Attendance Summary</h3>
+
+    <button onclick="loadSummary()">Load Summary</button>
+
+    <ul id="summary"></ul>
+
+
+  </div>
+
+</div>
+
+<script>
+
+const user = JSON.parse(localStorage.getItem("user"));
+document.getElementById("avatar").innerText = user.name[0].toUpperCase();
+document.getElementById("username").innerText = user.name;
+
+
+if(!user || user.role !== "admin"){
+  window.location = "/";
+}
+
+function logout(){
+  localStorage.clear();
+  window.location = "/";
+}
+
+async function load(){
+
+  const res = await fetch("/api/admin/users", {
+    headers: {
+      "x-auth-token": localStorage.getItem("token")
+    }
+  });
+
+  const data = await res.json();
+
+  const teachers = document.getElementById("teachers");
+  const students = document.getElementById("students");
+
+  teachers.innerHTML = "";
+  students.innerHTML = "";
+
+  data.forEach(u => {
+
+    const li = document.createElement("li");
+
+    li.innerText = `${u.name} (${u.email})`;
+
+    if(u.role === "teacher"){
+      teachers.appendChild(li);
+    }
+
+    if(u.role === "student"){
+      students.appendChild(li);
+    }
+
+  });
+
+}
+
+async function loadSummary(){
+
+  const res = await fetch("/api/attendance/admin-summary", {
+    headers: {
+      "x-auth-token": localStorage.getItem("token")
+    }
+  });
+
+  const data = await res.json();
+
+  const list = document.getElementById("summary");
+  list.innerHTML = "";
+
+  data.forEach(item => {
+
+    const li = document.createElement("li");
+
+    li.innerText =
+      `${item._id.date} | ${item._id.subject} | Teacher: ${item._id.teacher} → ${item.count}`;
+
+    list.appendChild(li);
+
+  });
+
+}
+
+</script>
+
+</body>
+</html>

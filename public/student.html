@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="student.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<div class="navbar">
+  <h3>Smart Attendance | Student Panel</h3>
+
+  <div class="user-box">
+    <div class="avatar" id="avatar"></div>
+    <div class="username" id="username"></div>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+
+<div class="container">
+
+  <div class="card">
+
+    <h2>My Attendance</h2>
+
+    <button onclick="startScan()">Scan QR</button>
+
+    <div id="reader" style="width:250px;margin:10px auto;"></div>
+
+
+    <button onclick="load()">Load Records</button>
+
+    <ul id="list"></ul>
+
+  </div>
+
+</div>
+
+<script>
+
+const user = JSON.parse(localStorage.getItem("user"));
+// Show user info
+document.getElementById("avatar").innerText = user.name[0].toUpperCase();
+document.getElementById("username").innerText = user.name;
+
+
+if(!user){
+  window.location = "/";
+}
+
+function logout(){
+  localStorage.clear();
+  window.location = "/";
+}
+
+function startScan(){
+
+  const scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 200 },
+
+    async (text) => {
+
+      const data = JSON.parse(text);
+
+      await markAttendance(data.sessionId);
+
+      scanner.stop();
+      alert("Attendance Marked ✅");
+
+    },
+
+    err => {}
+  );
+}
+
+async function markAttendance(sessionId){
+
+  await fetch("/api/attendance/mark", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-auth-token": localStorage.getItem("token")
+    },
+
+    body: JSON.stringify({
+      sessionId,
+      studentId: user.id
+    })
+  });
+
+}
+
+async function load(){
+
+  const res = await fetch(`/api/attendance/student/${user.id}`, {
+    headers: {
+      "Content-Type": "application/json",
+      "x-auth-token": localStorage.getItem("token")
+    }
+  });
+  const data = await res.json();
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach(r => {
+
+    const li = document.createElement("li");
+
+    li.innerText = `${r.subject} - ${new Date(r.date).toLocaleString()}`;
+
+    list.appendChild(li);
+
+  });
+
+}
+
+</script>
+
+
+</body>
+</html>

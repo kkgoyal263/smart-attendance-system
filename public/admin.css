@@ -1,0 +1,9 @@
+@import url("style.css");
+
+.card {
+  border-top: 6px solid #ff9800;
+}
+
+h2 {
+  color: #ef6c00;
+}
