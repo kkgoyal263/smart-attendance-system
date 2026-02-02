@@ -26,9 +26,10 @@ mongoose.connect(process.env.MONGO_URL)
 .catch(err => console.log("DB Error:", err));
 
 // Start Server
-const PORT = 5000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server started on port", PORT);
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });
 
 // d4qdw4hf
